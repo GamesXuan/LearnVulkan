@@ -7,6 +7,7 @@
 #include <functional>
 
 #include <cstdlib>
+#include <vector>
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -50,6 +51,9 @@ private:
 	}
 
 	void cleanup() {
+
+		vkDestroyInstance(instance, nullptr);
+
 		glfwDestroyWindow(window);
 		glfwTerminate();
 	}
@@ -81,24 +85,43 @@ private:
 		uint32_t glfwExtensionCount = 0;
 		const char** glfwExtensions;
 		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-		std::cout << "glfwExtensionCount = " + glfwExtensionCount << std::endl;
+		std::cout << "glfwExtensionCount = "<< glfwExtensionCount << std::endl;
 		
 		createrInfo.enabledExtensionCount = glfwExtensionCount;
 		createrInfo.ppEnabledExtensionNames = glfwExtensions;
 
-		/*
-		* 指定全局校验层
-		*/
+		//TODO:指定全局校验层
 		createrInfo.enabledLayerCount = 0;
 
 		//创造Vulkan实例
-		VkResult result = vkCreateInstance(&createrInfo, nullptr, &instance);
-
-		if (result!=VK_SUCCESS)
+		if (vkCreateInstance(&createrInfo, nullptr, &instance) !=VK_SUCCESS)
 		{
 			throw std::runtime_error("failed to creater instance!");
 		}
+
+
+		/*
+		* available扩展支持。
+		*/
+		uint32_t instanceExtensionCount = 0;
+		vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr);
+
+		//分配数组来存储扩展信息
+		std::vector<VkExtensionProperties> instanceExtensions(instanceExtensionCount);
+
+		//获取所有扩展信息
+		vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, instanceExtensions.data());
+		
+		std::cout << "available extensions:" << std::endl;
+		for (const auto& extension:instanceExtensions)
+		{
+			std::cout << "\t" << extension.extensionName << std::endl;
+		}
+	
 	}
+
+
+
 
 };
 
