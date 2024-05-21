@@ -12,6 +12,15 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
+const std::vector<const char*> validationLayers = {
+	"VK_LAYER_KNRONOS_validation"
+};
+
+#ifdef NDEBUG
+const bool enableValidationLayers = false;
+#else
+const bool enableValidationLayers = true;
+#endif
 
 class HelloTriangleApplication
 {
@@ -61,6 +70,12 @@ private:
 
 
 	void createInstance() {
+		if (enableValidationLayers && !checkValidationLayerSupper())
+		{
+			throw std::runtime_error("Validation layers requested ,but not available!");
+		}
+
+
 		/*
 		应用程序信息
 		*/
@@ -87,11 +102,19 @@ private:
 		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 		std::cout << "glfwExtensionCount = "<< glfwExtensionCount << std::endl;
 		
-		createrInfo.enabledExtensionCount = glfwExtensionCount;
-		createrInfo.ppEnabledExtensionNames = glfwExtensions;
+		if (enableValidationLayers)
+		{
+			createrInfo.enabledExtensionCount = glfwExtensionCount;
+			createrInfo.ppEnabledExtensionNames = glfwExtensions;
 
-		//TODO:指定全局校验层
-		createrInfo.enabledLayerCount = 0;
+		}
+		else
+		{
+			createrInfo.enabledLayerCount = 0;
+
+		}
+	
+
 
 		//创造Vulkan实例
 		if (vkCreateInstance(&createrInfo, nullptr, &instance) !=VK_SUCCESS)
@@ -120,7 +143,38 @@ private:
 	
 	}
 
+	/*
+	* 请求所有可用的校验层
+	*/
+	bool checkValidationLayerSupper() {
+		uint32_t layerCount;
+	
+		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+		std::cout << "layerCount = " << layerCount << std::endl;
 
+		std::vector<VkLayerProperties> availableLayers(layerCount);
+		vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+	
+		for (const char* layername:validationLayers)
+		{
+			bool layerFound = false;
+
+			for (const auto& layerProperties:availableLayers)
+			{
+				std::cout << "Layername \t" << layerProperties.layerName << std::endl;
+				if (strcmp(layername,layerProperties.layerName)==0)
+				{
+					layerFound = true;
+					break;
+				}
+			}
+			if (!layerFound)
+			{
+				return false;
+			}
+		}
+		return false;
+	}
 
 
 };
