@@ -22,7 +22,33 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
-VkDebugUtilsMessengerEXT callback;
+
+
+
+VkResult CreateDebugUtilsMessengerEXT(
+	VkInstance instance,
+	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+	const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pCallback)
+{
+	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+	if (func != nullptr)
+	{
+		return func(instance, pCreateInfo, pAllocator, pCallback);
+	}
+	else
+	{
+		return VK_ERROR_EXTENSION_NOT_PRESENT;
+	}
+}
+
+void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator)
+{
+	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+	if (func != nullptr)
+	{
+		func(instance, messenger, pAllocator);
+	}
+}
 
 class HelloTriangleApplication
 {
@@ -38,6 +64,7 @@ private:
 	VkInstance instance;
 
 	GLFWwindow* window;
+	VkDebugUtilsMessengerEXT callback;
 
 
 	void initWindow() {
@@ -75,7 +102,7 @@ private:
 
 
 	void createInstance() {
-		if (enableValidationLayers && !checkValidationLayerSupper())
+		if (enableValidationLayers && !checkValidationLayerSupport())
 		{
 			throw std::runtime_error("Validation layers requested ,but not available!");
 		}
@@ -110,7 +137,16 @@ private:
 		createrInfo.ppEnabledExtensionNames = extensions.data();
 
 	
-
+		//在校验层启动时，使用校验层
+		if (enableValidationLayers)
+		{
+			createrInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+			createrInfo.ppEnabledLayerNames = validationLayers.data();
+		}
+		else
+		{
+			createrInfo.enabledLayerCount = 0;
+		}
 
 		//创造Vulkan实例
 		if (vkCreateInstance(&createrInfo, nullptr, &instance) !=VK_SUCCESS)
@@ -124,7 +160,7 @@ private:
 		*/
 		uint32_t instanceExtensionCount = 0;
 		vkEnumerateInstanceExtensionProperties(nullptr, &instanceExtensionCount, nullptr);
-
+		 
 		//分配数组来存储扩展信息
 		std::vector<VkExtensionProperties> instanceExtensions(instanceExtensionCount);
 
@@ -142,11 +178,10 @@ private:
 	/*
 	* 请求所有可用的校验层
 	*/
-	bool checkValidationLayerSupper() {
+	bool checkValidationLayerSupport() {
 		uint32_t layerCount;
 	
 		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-		std::cout << "layerCount = " << layerCount << std::endl;
 
 		std::vector<VkLayerProperties> availableLayers(layerCount);
 		vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
@@ -157,7 +192,6 @@ private:
 
 			for (const auto& layerProperties:availableLayers)
 			{
-				std::cout << "Layername \t" << layerProperties.layerName << std::endl;
 				if (strcmp(layername,layerProperties.layerName)==0)
 				{
 					layerFound = true;
@@ -169,7 +203,7 @@ private:
 				return false;
 			}
 		}
-		return false;
+		return true;
 	}
 
 
@@ -240,30 +274,6 @@ private:
 		}
 	}
 
-	VkResult CreateDebugUtilsMessengerEXT(
-		VkInstance instance,
-		const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-		const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pCallback)
-	{
-		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-		if (func!=nullptr)
-		{
-			return func(instance, pCreateInfo, pAllocator, pCallback);
-		}
-		else
-		{
-			return VK_ERROR_EXTENSION_NOT_PRESENT;
-		}
-	}
-
-	void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator)
-	{
-		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
-		if (func!=nullptr)
-		{
-			func(instance, callback, pAllocator);
-		}
-	}
 
 };
 
