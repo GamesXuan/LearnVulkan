@@ -1,1 +1,2 @@
 E:\Games\VulkanTest\VulkanTest1\x64\Debug\VulkanTest1.exe
+E:\Games\LearnVulkan\VulkanTest1\x64\Debug\VulkanTest1.exe

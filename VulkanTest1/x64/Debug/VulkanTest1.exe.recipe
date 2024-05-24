@@ -2,7 +2,7 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
-      <FullPath>E:\Games\VulkanTest\VulkanTest1\x64\Debug\VulkanTest1.exe</FullPath>
+      <FullPath>E:\Games\LearnVulkan\VulkanTest1\x64\Debug\VulkanTest1.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>
   <ContentFiles />
