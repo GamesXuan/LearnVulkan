@@ -159,9 +159,14 @@ private:
 		std::vector<VkPhysicalDevice> physicalDevices(deviceCount);
 		vkEnumeratePhysicalDevices(instance, &deviceCount, physicalDevices.data());
 
-		
+		//给设备打分，选择分数最高的设备。
+		//使用一个有序的map给设备自动排序。multimap允许多个值映射一个key
+		std::multimap<int, VkPhysicalDevice> candidates;
 		for (const auto& device:physicalDevices)
 		{
+			int score = rateDeviceSuitability(device);
+
+
 			if (isDeviceSuitable(device))
 			{
 				physicalDevice = device;
@@ -176,6 +181,32 @@ private:
 	
 
 
+	}
+
+	int rateDeviceSuitability(VkPhysicalDevice device)
+	{	
+		//通过vkGetPhysicalDeviceProperities查询物理设备的名称、类型、支持的Vulkan版本等
+		VkPhysicalDeviceProperties deviceProperties;
+		vkGetPhysicalDeviceProperties(device, &deviceProperties);
+		//纹理压缩，64位浮点、多视口渲染可通过vkGetPhysicalDeviceFeatures查询
+		VkPhysicalDeviceFeatures deviceFeatures;
+		vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+		int score = 0;
+
+		//独立显卡权重++
+		if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+		{
+			score += 1000;
+		}
+		//能接受的最大的图
+		score += deviceProperties.limits.maxImageDimension2D;
+
+		//app没有几何shader,辣鸡，0分
+		if (!deviceFeatures.geometryShader) {
+			return 0;
+		}
+		return score;
 	}
 
 	//检查设备是否符合需求
