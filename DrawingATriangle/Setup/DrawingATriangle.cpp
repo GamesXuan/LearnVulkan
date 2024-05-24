@@ -64,6 +64,7 @@ private:
 	void initVulkan() {
 		createInstance();
 		setupDebugMessenger();
+		pickPhysicalDevice();
 	}
 
 	void mainLoop() {
@@ -142,6 +143,43 @@ private:
 			throw std::runtime_error("failed to set up debug messenger!");
 		}
 	}
+	
+	//选择一个物理设备。
+	void pickPhysicalDevice() {
+		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+		//请求显卡列表
+		uint32_t deviceCount = 0;
+		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+		if (deviceCount==0)
+		{
+			throw std::runtime_error("faild to find GPUs with Vulkan support! ");
+		}
+		//分配数据来存储VkPhysicalDevice对象
+		std::vector<VkPhysicalDevice> physicalDevices(deviceCount);
+		vkEnumeratePhysicalDevices(instance, &deviceCount, physicalDevices.data());
+		
+		for (const auto& device:physicalDevices)
+		{
+			if (isDeviceSuitable(device))
+			{
+				physicalDevice = device;
+				break;
+			}
+		}
+		if (physicalDevice=VK_NULL_HANDLE)
+		{
+			throw std::runtime_error("failed to find a suitable GPU!");
+		}
+	}
+
+	//检查设备是否符合需求
+	bool isDeviceSuitable(VkPhysicalDevice devices)
+	{ 
+
+		return true;
+	}
+
+
 
 	std::vector<const char*> getRequiredExtensions() {
 		uint32_t glfwExtensionCount = 0;
