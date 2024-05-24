@@ -93,6 +93,11 @@ private:
 	VkInstance instance;
 	VkDebugUtilsMessengerEXT debugMessenger;
 
+	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+	VkDevice device;//逻辑设备
+	VkQueue graphicsQueue;
+
+
 	void initWindow() {
 		glfwInit();
 
@@ -106,6 +111,7 @@ private:
 		createInstance();
 		setupDebugMessenger();
 		pickPhysicalDevice();
+		createLogicalDevice();
 	}
 
 	void mainLoop() {
@@ -120,6 +126,7 @@ private:
 		}
 
 		vkDestroyInstance(instance, nullptr);
+		vkDestroyDevice(device, nullptr);
 
 		glfwDestroyWindow(window);
 
@@ -187,7 +194,6 @@ private:
 	
 	//选择一个物理设备。
 	void pickPhysicalDevice() {
-		VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
 		//请求显卡列表
 		uint32_t deviceCount = 0;
 		vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
@@ -303,6 +309,53 @@ private:
 
 		return VK_FALSE;
 	}
+
+
+
+	//----------逻辑设备---------//
+	void createLogicalDevice() {
+		QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+
+		VkDeviceQueueCreateInfo queueCreateInfo = {};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = indices.graphicsFamily;
+		queueCreateInfo.queueCount = 1;
+		//优先级来控制指令缓冲的执行顺序。
+		float queuePriority = 1.0f;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+
+		//指定应用程序使用的设备特性
+		VkPhysicalDeviceFeatures deviceFeatures{};
+
+
+		VkDeviceCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		//
+		createInfo.pQueueCreateInfos = &queueCreateInfo;
+		createInfo.queueCreateInfoCount = 1;
+
+		createInfo.pEnabledFeatures = &deviceFeatures;
+
+		//对设备和vulkan实例使用相同的校验层
+		createInfo.enabledExtensionCount = 0;
+
+		if (enableValidationLayers) {
+			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+			createInfo.ppEnabledLayerNames = validationLayers.data();
+		}
+		else {
+			createInfo.enabledLayerCount = 0;
+		}
+		//调用vkCreateDevice来创建逻辑设备
+		if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS)
+		{
+			throw std::runtime_error("failed to create logical device!");
+		}
+		vkGetDeviceQueue(device, indices.graphicsFamily, 0, &graphicsQueue);
+	}
+	
+	
+	
 };
 
 int main() {
