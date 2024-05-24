@@ -252,7 +252,7 @@ private:
 	//检查设备是否符合需求
 	bool isDeviceSuitable(VkPhysicalDevice devices)
 	{
-		QueueFamilyIndices indices = findQueueFamilies(device);
+		QueueFamilyIndices indices = findQueueFamilies(devices);
 
 		return indices.isComplete();
 	}
