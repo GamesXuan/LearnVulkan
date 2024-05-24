@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstring>
 #include <cstdlib>
+#include <map>
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -157,6 +158,7 @@ private:
 		//分配数据来存储VkPhysicalDevice对象
 		std::vector<VkPhysicalDevice> physicalDevices(deviceCount);
 		vkEnumeratePhysicalDevices(instance, &deviceCount, physicalDevices.data());
+
 		
 		for (const auto& device:physicalDevices)
 		{
@@ -170,13 +172,23 @@ private:
 		{
 			throw std::runtime_error("failed to find a suitable GPU!");
 		}
+
+	
+
+
 	}
 
 	//检查设备是否符合需求
 	bool isDeviceSuitable(VkPhysicalDevice devices)
-	{ 
-
-		return true;
+	{
+		//通过vkGetPhysicalDeviceProperities查询物理设备的名称、类型、支持的Vulkan版本等
+		VkPhysicalDeviceProperties deviceProperties;
+		vkGetPhysicalDeviceProperties(devices, &deviceProperties);
+		//纹理压缩，64位浮点、多视口渲染可通过vkGetPhysicalDeviceFeatures查询
+		VkPhysicalDeviceFeatures deviceFeatures;
+		vkGetPhysicalDeviceFeatures(devices, &deviceFeatures);
+		//独立显卡、
+		return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader;
 	}
 
 
