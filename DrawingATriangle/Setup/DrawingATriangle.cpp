@@ -21,6 +21,46 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
+struct QueueFamilyIndices
+{
+	int graphicsFamily = -1;
+
+	bool isComplete() {
+		return graphicsFamily >= 0;
+	}
+
+};
+
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device)
+{
+	QueueFamilyIndices indices;
+	//获取设备队列族个数
+	uint32_t queneFamilyCount = 0;
+	vkGetPhysicalDeviceQueueFamilyProperties(device,&queneFamilyCount, nullptr);
+	//分配数组存储队列族的vkQueueFamilyProperties对象
+	std::vector<VkQueueFamilyProperties> queueFamilies(queneFamilyCount);
+	vkGetPhysicalDeviceQueueFamilyProperties(device, &queneFamilyCount, queueFamilies.data());
+
+	int i = 0;
+	for (const auto& queueFamily:queueFamilies)
+	{
+		std::cout << "queueFamily : " << queueFamily.queueFlags << std::endl;
+		if (queueFamily.queueCount>0&&queueFamily.queueFlags&VK_QUEUE_GRAPHICS_BIT)
+		{
+			indices.graphicsFamily = i;
+		}
+		if (indices.isComplete())
+		{
+			break;
+		}
+		i++;
+	}
+
+
+	return indices;
+}
+
+
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
 	auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 	if (func != nullptr) {
@@ -212,14 +252,9 @@ private:
 	//检查设备是否符合需求
 	bool isDeviceSuitable(VkPhysicalDevice devices)
 	{
-		//通过vkGetPhysicalDeviceProperities查询物理设备的名称、类型、支持的Vulkan版本等
-		VkPhysicalDeviceProperties deviceProperties;
-		vkGetPhysicalDeviceProperties(devices, &deviceProperties);
-		//纹理压缩，64位浮点、多视口渲染可通过vkGetPhysicalDeviceFeatures查询
-		VkPhysicalDeviceFeatures deviceFeatures;
-		vkGetPhysicalDeviceFeatures(devices, &deviceFeatures);
-		//独立显卡、
-		return deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && deviceFeatures.geometryShader;
+		QueueFamilyIndices indices = findQueueFamilies(device);
+
+		return indices.isComplete();
 	}
 
 
